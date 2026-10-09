@@ -1,9 +1,9 @@
 // Singurul modul care vorbește cu Supabase.
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm";
+// Biblioteca e copiată local în js/vendor/supabase.js (încărcată în index.html), nu de pe CDN.
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 import { isoRo, intervalLuna } from "./format.js";
 
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = globalThis.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const PAGINA = 1000; // limita implicită de rânduri pe cerere în Supabase
 
 const MESAJE = {
@@ -56,6 +56,15 @@ export async function getImprumuturiDeschise() {
   return rez(await sb.from("v_imprumuturi")
     .select("id, data, din, in_, in_id, suma, rambursat, sold, status")
     .neq("status", "Rambursat").order("data").order("id"));
+}
+// Ultima intrare adăugată de utilizatorul logat (null dacă nu are).
+export async function getUltimaIntrare() {
+  const user = rez(await sb.auth.getSession()).session?.user;
+  if (!user) return null;
+  return rez(await sb.from("tranzactii").select("categorie_id, suma, nota")
+    .eq("tip", "intrare").eq("created_by", user.id).is("deleted_at", null)
+    .order("created_at", { ascending: false }).order("id", { ascending: false })
+    .limit(1).maybeSingle());
 }
 
 // --- scriere ---
@@ -150,6 +159,7 @@ async function toate(tabela, ordine) {
     if (r.length < PAGINA) return out;
   }
 }
+export const getCeluleToate = () => toate("v_buget_celule", ["an", "luna", "categorie_id"]);
 export async function exportTot() {
   const [categorii, ani, categoriiInactive, imprumuturi, tranzactii] = await Promise.all([
     toate("categorii", ["id"]), toate("ani", ["an"]), toate("categorii_inactive", ["categorie_id", "an"]),

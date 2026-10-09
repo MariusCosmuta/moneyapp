@@ -1,7 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { fmt, isoLocal, isoRo, parseSuma, LUNI } from "../js/format.js";
-import { construiesteBuget, construiesteStrategie, totalDatorii } from "../js/calc.js";
+import { fmt, isoLocal, isoRo, parseSuma, sumaRapida, LUNI } from "../js/format.js";
+import {
+  construiesteBuget, construiesteStrategie, construiesteProgres, totalDatorii, serieLunara, soldCumulat
+} from "../js/calc.js";
 
 const nbsp = (s) => s.replace(/\u00a0|\u202f/g, " ");
 
@@ -33,6 +35,15 @@ test("parseSuma", () => {
 test("LUNI are 12 luni în ordine", () => {
   assert.equal(LUNI.length, 12);
   assert.equal(LUNI[9], "Octombrie");
+});
+
+test("sumaRapida: pune suma păstrând semnul, ± inversează", () => {
+  assert.equal(sumaRapida("", 200), "200");
+  assert.equal(sumaRapida("50", 400), "400");
+  assert.equal(sumaRapida("-50", 400), "-400");
+  assert.equal(sumaRapida("200", "±"), "-200");
+  assert.equal(sumaRapida("-200", "±"), "200");
+  assert.equal(sumaRapida("", "±"), "");
 });
 
 const CATEGORII = [
@@ -77,4 +88,41 @@ test("construiesteStrategie: pus = valoarea lunii, ok când pus >= țintă", () 
 test("totalDatorii", () => {
   assert.equal(totalDatorii([{ sold: "1866.00" }, { sold: 1526 }, { sold: 0.1 }, { sold: 0.2 }]), 3392.3);
   assert.equal(totalDatorii([]), 0);
+});
+
+test("construiesteProgres: fără țintă nu apare; procent limitat la 0–100", () => {
+  const items = [
+    { nume: "A", tinta: 200, pus: 50, ok: false },
+    { nume: "B", tinta: 100, pus: 250, ok: true },
+    { nume: "C", tinta: 100, pus: -40, ok: false },
+    { nume: "D", tinta: 0, pus: 10, ok: true }
+  ];
+  assert.deepEqual(construiesteProgres({ items }).map((i) => [i.nume, i.procent]), [["A", 25], ["B", 100], ["C", 0]]);
+});
+
+test("serieLunara: 12 valori pe an, pe categorie sau toate", () => {
+  const celule = [
+    { an: 2026, luna: 1, categorie_id: 1, valoare: 100 },
+    { an: 2026, luna: 1, categorie_id: 2, valoare: "50.10" },
+    { an: 2026, luna: 3, categorie_id: 1, valoare: -30 },
+    { an: 2025, luna: 1, categorie_id: 1, valoare: 999 }
+  ];
+  assert.deepEqual(serieLunara(celule, 2026, null), [150.1, 0, -30, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(serieLunara(celule, 2026, 2), [50.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(serieLunara(celule, 2024, null), Array(12).fill(0));
+});
+
+test("soldCumulat: lună cu lună, completează lunile goale, peste ani", () => {
+  const celule = [
+    { an: 2026, luna: 2, categorie_id: 1, valoare: -20 },
+    { an: 2025, luna: 11, categorie_id: 1, valoare: 100 },
+    { an: 2025, luna: 11, categorie_id: 2, valoare: 7 },
+    { an: 2025, luna: 12, categorie_id: 2, valoare: 0.1 }
+  ];
+  assert.deepEqual(soldCumulat(celule, 1), [
+    { an: 2025, luna: 11, sold: 100 }, { an: 2025, luna: 12, sold: 100 },
+    { an: 2026, luna: 1, sold: 100 }, { an: 2026, luna: 2, sold: 80 }
+  ]);
+  assert.deepEqual(soldCumulat(celule, null).map((p) => p.sold), [107, 107.1, 107.1, 87.1]);
+  assert.deepEqual(soldCumulat([], null), []);
 });

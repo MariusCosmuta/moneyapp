@@ -30,3 +30,10 @@ export function parseSuma(v) {
   const n = Number(s);
   return Number.isFinite(n) ? Math.round(n * 100) / 100 : NaN;
 }
+
+// Butoanele de sumă rapidă: "±" inversează semnul; un număr îl pune păstrând semnul sumei curente.
+export function sumaRapida(curent, actiune) {
+  const n = parseSuma(curent);
+  if (actiune === "±") return Number.isNaN(n) ? "" : String(-n);
+  return String(n < 0 ? -actiune : actiune);
+}

@@ -43,6 +43,43 @@ export function construiesteStrategie({ categorii, inactive, celule, luna }) {
   return { items, totalTinta, totalPus, ok: totalPus >= totalTinta };
 }
 
+// Doar categoriile cu țintă; procent 0–100 pentru bara de progres.
+export function construiesteProgres(strategie) {
+  return strategie.items
+    .filter((i) => i.tinta > 0)
+    .map((i) => ({ ...i, procent: Math.round(Math.min(100, Math.max(0, (i.pus / i.tinta) * 100))) }));
+}
+
+const potriveste = (c, categorieId) => categorieId == null || Number(c.categorie_id) === Number(categorieId);
+
+// 12 valori (ianuarie–decembrie) pentru un an; categorieId null = toate categoriile.
+export function serieLunara(celule, an, categorieId) {
+  const v = Array(12).fill(0);
+  for (const c of celule) {
+    if (Number(c.an) === an && potriveste(c, categorieId)) v[Number(c.luna) - 1] += Number(c.valoare) || 0;
+  }
+  return v.map(r2);
+}
+
+// Soldul cumulat lună de lună, de la prima până la ultima lună cu date (lunile goale păstrează soldul).
+export function soldCumulat(celule, categorieId) {
+  const per = new Map();
+  for (const c of celule) {
+    if (!potriveste(c, categorieId)) continue;
+    const k = Number(c.an) * 12 + Number(c.luna) - 1;
+    per.set(k, (per.get(k) ?? 0) + (Number(c.valoare) || 0));
+  }
+  if (!per.size) return [];
+  const chei = [...per.keys()];
+  const out = [];
+  let sold = 0;
+  for (let k = Math.min(...chei); k <= Math.max(...chei); k++) {
+    sold += per.get(k) ?? 0;
+    out.push({ an: Math.floor(k / 12), luna: (k % 12) + 1, sold: r2(sold) });
+  }
+  return out;
+}
+
 export function totalDatorii(imprumuturi) {
   return r2(imprumuturi.reduce((s, x) => s + (Number(x.sold) || 0), 0));
 }

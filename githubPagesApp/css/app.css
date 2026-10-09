@@ -6,7 +6,9 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; font-family: -apple-system, system-ui, sans-serif;
-  background: var(--bg); color: var(--txt); padding: 16px; padding-bottom: 40px; }
+  background: var(--bg); color: var(--txt);
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
 h1 { font-size: 22px; margin: 8px 0 20px; }
 h2 { font-size: 18px; margin: 0 0 12px; }
 .hide { display: none !important; }
@@ -57,6 +59,25 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--a
 .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .btn.secondary { background: var(--card2); color: var(--txt); }
 .btn.danger { background: var(--err); }
+.btn.mt0 { margin-top: 0; }
+
+.chips { display: flex; gap: 8px; margin-top: 8px; }
+.chip { flex: 1; padding: 10px 0; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card2); color: var(--txt); font-size: 15px; font-weight: 600; cursor: pointer; }
+.chip:active { background: var(--line); }
+
+.prog { margin-top: 12px; }
+.prog .muted { font-size: 13px; white-space: nowrap; }
+.bar { height: 8px; margin-top: 6px; border-radius: 4px; background: var(--card2); overflow: hidden; }
+.bar-fill { height: 100%; background: var(--accent); }
+.bar-fill.ok { background: var(--ok); }
+
+.grafic { display: block; width: 100%; height: auto; margin-top: 8px; }
+.g-axa { stroke: var(--line); stroke-width: 1; }
+.g-pos { fill: var(--ok); }
+.g-neg { fill: var(--err); }
+.g-linie { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+.g-txt { fill: var(--muted); font-size: 10px; }
 
 .item-btn { display: block; width: 100%; margin-top: 6px; padding: 8px 0 0; border: 0;
   border-top: 1px solid rgba(255,255,255,.06); background: none; color: inherit;
@@ -68,7 +89,7 @@ label.check { display: flex; align-items: center; gap: 10px; color: var(--txt); 
 input[type="checkbox"] { width: 20px; height: 20px; padding: 0; margin: 0; accent-color: var(--accent); }
 select:disabled { opacity: .6; }
 
-.toast { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 14px;
+.toast { position: fixed; left: 16px; right: 16px; bottom: max(16px, env(safe-area-inset-bottom)); padding: 14px;
   border-radius: 10px; text-align: center; font-weight: 600; z-index: 10; }
 .toast.ok { background: var(--ok); color: var(--bg); }
 .toast.err { background: var(--err); color: var(--bg); }

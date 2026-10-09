@@ -1,6 +1,6 @@
 import * as api from "./db.js";
-import { fmt, isoLocal, isoRo, parseSuma, LUNI } from "./format.js";
-import { construiesteBuget, construiesteStrategie, totalDatorii } from "./calc.js";
+import { fmt, isoLocal, isoRo, parseSuma, sumaRapida, LUNI } from "./format.js";
+import { construiesteBuget, construiesteStrategie, construiesteProgres, totalDatorii } from "./calc.js";
 import { $, h, ecran, toast, cuButon, info, inBox } from "./ui.js";
 import { inregistreaza, go, leagaNavigare } from "./nav.js";
 import {
@@ -10,6 +10,7 @@ import "./tranzactii.js";
 import "./imprumuturi.js";
 import "./categorii.js";
 import "./export.js";
+import "./grafice.js";
 
 // ---------- Acasă ----------
 async function incarcaHome() {
@@ -17,16 +18,38 @@ async function incarcaHome() {
   $("lunaLbl").textContent = `(${LUNI[luna - 1]})`;
   const datorii = api.getImprumuturiDeschise();
   inBox($("h_datorii"), "Se încarcă datoriile…", async () => cardDatorii(await datorii));
+  inBox($("h_progres"), "Se încarcă progresul…", cardProgres);
   const [tot, lista] = await Promise.all([api.getTotalLuna(an, luna), datorii]);
   seteazaVal($("soldVal"), tot.totalLuna);
   $("datoriiVal").textContent = fmt(totalDatorii(lista));
 }
 
+async function cardProgres() {
+  const lista = construiesteProgres(await strategieLunaCurenta());
+  if (!lista.length) return h("div");
+  const atinse = lista.filter((c) => c.ok).length;
+  return h("div", { class: "card" },
+    h("div", { class: "card-head" }, h("strong", {}, "🎯 Luna asta"), h("span", { class: "muted" }, `${atinse}/${lista.length} atinse`)),
+    lista.map((c) => {
+      const umplere = h("div", { class: c.ok ? "bar-fill ok" : "bar-fill" });
+      umplere.style.width = `${c.procent}%`;
+      return h("div", { class: "prog" },
+        h("div", { class: "item-top" }, h("span", {}, `${emoji(c.owner)} ${c.nume}`),
+          h("span", { class: "muted" }, `${fmt(c.pus)} / ${fmt(c.tinta)}`)),
+        h("div", { class: "bar" }, umplere));
+    }));
+}
+
 // ---------- Intrare rapidă + strategie ----------
-async function cardStrategie() {
+async function strategieLunaCurenta() {
   const azi = new Date(), an = azi.getFullYear(), luna = azi.getMonth() + 1;
   const [cats, inactive, celule] = await Promise.all([getCategorii(), api.getInactive(an), api.getCelule(an)]);
-  const s = construiesteStrategie({ categorii: cats, inactive, celule, luna });
+  return construiesteStrategie({ categorii: cats, inactive, celule, luna });
+}
+
+async function cardStrategie() {
+  const luna = new Date().getMonth() + 1;
+  const s = await strategieLunaCurenta();
   if (!s.items.length) return h("div");
   return h("div", { class: "card" },
     h("div", { class: "card-head" }, h("strong", {}, `🎯 Strategie — ${LUNI[luna - 1]}`)),
@@ -46,13 +69,26 @@ async function cardStrategie() {
           h("td", { class: "chk" }, s.ok ? "✅" : "")))));
 }
 
+let ultima = null;
+
 async function setupIntrare() {
   $("i_data").value = isoLocal();
   $("i_suma").value = "";
   $("i_nota").value = "";
+  $("btn_i_repeta").disabled = true;
   const strategie = inBox($("i_strategie"), "Se încarcă strategia…", cardStrategie);
-  umpleSelect($("i_cat"), optiuniCategorii(await getCategorii()));
+  const [cats, u] = await Promise.all([getCategorii(), api.getUltimaIntrare().catch(() => null)]);
+  ultima = u;
+  umpleSelect($("i_cat"), optiuniCategorii(cats), ultima?.categorie_id);
+  $("btn_i_repeta").disabled = !ultima;
   await strategie;
+}
+
+function repetaUltima() {
+  if (!ultima) return;
+  $("i_cat").value = ultima.categorie_id;
+  $("i_suma").value = Number(ultima.suma);
+  $("i_nota").value = ultima.nota ?? "";
 }
 
 async function salveazaIntrare(btn) {
@@ -60,7 +96,10 @@ async function salveazaIntrare(btn) {
   if (!data) return toast("Alege data", false);
   if (!suma) return toast("Adaugă suma", false);
   await cuButon(btn, async () => {
-    await api.adaugaIntrare({ data, categorieId: Number($("i_cat").value), suma, nota: $("i_nota").value.trim() });
+    const categorieId = Number($("i_cat").value), nota = $("i_nota").value.trim();
+    await api.adaugaIntrare({ data, categorieId, suma, nota });
+    ultima = { categorie_id: categorieId, suma, nota };
+    $("btn_i_repeta").disabled = false;
     $("i_suma").value = "";
     $("i_nota").value = "";
     $("i_suma").focus();
@@ -190,6 +229,12 @@ function leagaEvenimente() {
   });
   $("btn_logout").addEventListener("click", () => api.logout().catch((e) => toast("Eroare: " + e.message, false)));
   $("btn_intrare").addEventListener("click", (e) => salveazaIntrare(e.currentTarget));
+  $("btn_i_repeta").addEventListener("click", repetaUltima);
+  $("i_rapid").addEventListener("click", (e) => {
+    const v = e.target.closest("button")?.dataset.suma;
+    if (!v) return;
+    $("i_suma").value = sumaRapida($("i_suma").value, v === "±" ? v : Number(v));
+  });
   $("btn_imprumut").addEventListener("click", (e) => salveazaImprumut(e.currentTarget));
   $("btn_rambursare").addEventListener("click", (e) => salveazaRambursare(e.currentTarget));
   $("rb_imp").addEventListener("change", infoRambursare);
@@ -201,6 +246,7 @@ function leagaEvenimente() {
 
 async function porneste() {
   leagaEvenimente();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
   try {
     const s = await api.sesiune();
     go(s && (await api.esteMembru()) ? "home" : "login");

@@ -2,14 +2,18 @@
 <html lang="ro">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; connect-src https://urgqslgslpdscvgnoauc.supabase.co wss://urgqslgslpdscvgnoauc.supabase.co; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src https://urgqslgslpdscvgnoauc.supabase.co wss://urgqslgslpdscvgnoauc.supabase.co; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
   <meta name="theme-color" content="#0f1115">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>💰 Money App</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/app.css">
+  <script src="js/vendor/supabase.js"></script>
   <script type="module" src="js/app.js"></script>
 </head>
 <body>
@@ -45,22 +49,32 @@
     <button class="big" type="button" data-go="imprumut">💸 Împrumut nou</button>
     <button class="big" type="button" data-go="rambursare">💰 Rambursare</button>
     <button class="big" type="button" data-go="buget">📊 Vezi bugetul</button>
+    <button class="big" type="button" data-go="grafice">📈 Grafice</button>
     <button class="big" type="button" data-go="tranzactii">📋 Tranzacții</button>
     <button class="big" type="button" data-go="imprumuturi">🧾 Împrumuturi</button>
     <button class="big" type="button" data-go="categorii">⚙️ Categorii și ani</button>
     <button class="big" type="button" data-go="export">💾 Export</button>
+    <div id="h_progres"></div>
   </div>
 
   <div id="intrare" class="ecran hide">
     <button class="link back" type="button" data-go="home">← înapoi</button>
     <h2>➕ Intrare rapidă</h2>
     <div class="card">
+      <button class="btn secondary mt0" type="button" id="btn_i_repeta" disabled>🔁 Repetă ultima</button>
       <label for="i_data">Data</label>
       <input type="date" id="i_data">
       <label for="i_cat">Categorie</label>
       <select id="i_cat"></select>
       <label for="i_suma">Sumă (lei) — negativ = cheltuială</label>
       <input type="number" id="i_suma" inputmode="decimal" step="0.01" placeholder="ex: 40 sau -120">
+      <div class="chips" id="i_rapid">
+        <button class="chip" type="button" data-suma="100">100</button>
+        <button class="chip" type="button" data-suma="200">200</button>
+        <button class="chip" type="button" data-suma="400">400</button>
+        <button class="chip" type="button" data-suma="600">600</button>
+        <button class="chip" type="button" data-suma="±" aria-label="Schimbă semnul">±</button>
+      </div>
       <label for="i_nota">Notă (opțional)</label>
       <textarea id="i_nota" rows="2"></textarea>
       <button class="btn" type="button" id="btn_intrare">💾 Salvează</button>
@@ -123,6 +137,25 @@
     </div>
     <div id="b_datorii"></div>
     <div id="b_lista"></div>
+  </div>
+
+  <div id="grafice" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>📈 Grafice</h2>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="g_cat">Categorie</label>
+          <select id="g_cat"></select>
+        </div>
+        <div>
+          <label for="g_an">An</label>
+          <select id="g_an"></select>
+        </div>
+      </div>
+    </div>
+    <div id="g_lunar"></div>
+    <div id="g_cumulat"></div>
   </div>
 
   <div id="tranzactii" class="ecran hide">
