@@ -1,0 +1,82 @@
+:root {
+  --bg: #0f1115; --card: #1a1d24; --card2: #232732; --line: #2b3040;
+  --txt: #e6e8ec; --muted: #8a92a3;
+  --marius: #cfe2f3; --isabela: #f4cccc;
+  --ok: #4ade80; --err: #f87171; --accent: #60a5fa;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: -apple-system, system-ui, sans-serif;
+  background: var(--bg); color: var(--txt); padding: 16px; padding-bottom: 40px; }
+h1 { font-size: 22px; margin: 8px 0 20px; }
+h2 { font-size: 18px; margin: 0 0 12px; }
+.hide { display: none !important; }
+
+.card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+.card.info { color: var(--muted); text-align: center; }
+.card.eroare { color: var(--err); }
+.card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.muted { color: var(--muted); }
+.mt { margin-top: 6px; }
+
+.stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+.stat .lbl { color: var(--muted); font-size: 14px; }
+.val { font-size: 18px; font-weight: 600; }
+.val.neg { color: var(--err); }
+.val.pos { color: var(--ok); }
+
+.item { border-top: 1px solid rgba(255,255,255,.06); padding-top: 8px; margin-top: 6px; }
+.item-top { display: flex; justify-content: space-between; gap: 8px; }
+.item-sub { color: var(--muted); font-size: .85em; margin-top: 2px; }
+
+.cat-title { display: flex; align-items: center; margin-bottom: 8px; }
+.cat-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; }
+.cat-dot.marius { background: var(--marius); }
+.cat-dot.isabela { background: var(--isabela); }
+
+.top { display: flex; justify-content: space-between; align-items: center; }
+.link { background: none; border: 0; color: var(--muted); font-size: 14px; padding: 8px 0; cursor: pointer; }
+.back { display: block; margin-bottom: 4px; }
+
+button.big { width: 100%; padding: 18px; margin-bottom: 10px; border: 0;
+  border-radius: 12px; background: var(--card2); color: var(--txt);
+  font-size: 17px; font-weight: 600; text-align: left; cursor: pointer; }
+button.big:active { background: var(--line); }
+
+.row { display: flex; gap: 10px; }
+.row > * { flex: 1; }
+label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+input, select, textarea {
+  width: 100%; padding: 14px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--card2); color: var(--txt); font-size: 16px; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+.info-text { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+.btn { width: 100%; padding: 16px; margin-top: 16px; border: 0; border-radius: 12px;
+  background: var(--accent); color: var(--bg); font-size: 17px; font-weight: 700; cursor: pointer; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn.secondary { background: var(--card2); color: var(--txt); }
+.btn.danger { background: var(--err); }
+
+.item-btn { display: block; width: 100%; margin-top: 6px; padding: 8px 0 0; border: 0;
+  border-top: 1px solid rgba(255,255,255,.06); background: none; color: inherit;
+  font: inherit; text-align: left; cursor: pointer; }
+.card > .item-btn:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.item-btn:active { opacity: .7; }
+
+label.check { display: flex; align-items: center; gap: 10px; color: var(--txt); font-size: 15px; margin: 10px 0 0; }
+input[type="checkbox"] { width: 20px; height: 20px; padding: 0; margin: 0; accent-color: var(--accent); }
+select:disabled { opacity: .6; }
+
+.toast { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 14px;
+  border-radius: 10px; text-align: center; font-weight: 600; z-index: 10; }
+.toast.ok { background: var(--ok); color: var(--bg); }
+.toast.err { background: var(--err); color: var(--bg); }
+
+.stbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.stbl th, .stbl td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.stbl th { color: var(--muted); font-weight: 600; }
+.stbl .num { text-align: right; white-space: nowrap; }
+.stbl .chk { text-align: center; }
+.stbl .nota { color: var(--muted); font-size: 11px; margin-top: 2px; }
+.stbl tr.total td { border-top: 2px solid var(--line); font-weight: 700; }

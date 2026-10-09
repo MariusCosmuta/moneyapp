@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <style>
+    :root {
+      --bg: #0f1115; --card: #1a1d24; --card2: #232732;
+      --txt: #e6e8ec; --muted: #8a92a3;
+      --marius: #cfe2f3; --isabela: #f4cccc;
+      --ok: #4ade80; --err: #f87171; --accent: #60a5fa;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; font-family: -apple-system, system-ui, sans-serif;
+      background: var(--bg); color: var(--txt); padding: 16px; padding-bottom: 40px; }
+    h1 { font-size: 22px; margin: 8px 0 20px; }
+    h2 { font-size: 18px; margin: 0 0 12px; }
+    .card { background: var(--card); border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+    .stat { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
+    .stat .lbl { color: var(--muted); font-size: 14px; }
+    .stat .val { font-size: 18px; font-weight: 600; }
+    .val.neg { color: var(--err); }
+    .val.pos { color: var(--ok); }
+    button.big { width: 100%; padding: 18px; margin-bottom: 10px; border: 0;
+      border-radius: 12px; background: var(--card2); color: var(--txt);
+      font-size: 17px; font-weight: 600; text-align: left; cursor: pointer; }
+    button.big:active { background: #2b3040; }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #2b3040;
+      background: var(--card2); color: var(--txt); font-size: 16px; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    .btn { width: 100%; padding: 16px; margin-top: 16px; border: 0; border-radius: 12px;
+      background: var(--accent); color: #0f1115; font-size: 17px; font-weight: 700; cursor: pointer; }
+    .btn.secondary { background: var(--card2); color: var(--txt); }
+    .toast { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 14px;
+      border-radius: 10px; text-align: center; font-weight: 600; display: none; z-index: 10; }
+    .toast.ok { background: var(--ok); color: #0f1115; }
+    .toast.err { background: var(--err); color: #0f1115; }
+    .cat-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+      margin-right: 8px; vertical-align: middle; }
+    .hide { display: none; }
+    .back { color: var(--muted); font-size: 14px; padding: 8px 0; cursor: pointer; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .toast { transition: opacity 0.2s; }
+    .stbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .stbl th, .stbl td { padding: 8px 6px; border-bottom: 1px solid #2b3040; text-align: left; vertical-align: top; }
+    .stbl th { color: var(--muted); font-weight: 600; }
+    .stbl td.num, .stbl th.num { text-align: right; white-space: nowrap; }
+    .stbl td.chk, .stbl th.chk { text-align: center; }
+  </style>
+</head>
+<body>
+
+  <div id="home">
+    <h1>💰 Money App</h1>
+    <div class="card">
+      <div class="stat"><span class="lbl">Sold <span id="lunaLbl"></span></span>
+        <span class="val" id="soldVal">…</span></div>
+      <div class="stat"><span class="lbl">Datorii deschise</span>
+        <span class="val" id="datoriiVal">…</span></div>
+    </div>
+    <div id="h_datorii"></div>
+    <button class="big" onclick="show('intrare')">➕ Intrare rapidă</button>
+    <button class="big" onclick="show('imprumut')">💸 Împrumut nou</button>
+    <button class="big" onclick="show('rambursare')">💰 Rambursare</button>
+    <button class="big" onclick="veziBugetul()">📊 Vezi bugetul</button>
+  </div>
+
+  <div id="intrare" class="hide">
+    <div class="back" onclick="show('home')">← înapoi</div>
+    <h2>➕ Intrare rapidă</h2>
+    <div class="card">
+      <label>Data</label>
+      <input type="date" id="i_data">
+      <label>Categorie</label>
+      <select id="i_cat"></select>
+      <label>Sumă (lei) — negativ = cheltuială</label>
+      <input type="number" id="i_suma" inputmode="decimal" step="0.01" placeholder="ex: 40 sau -120">
+      <label>Notă (opțional)</label>
+      <textarea id="i_nota" rows="2"></textarea>
+      <button class="btn" onclick="salveazaIntrare()">💾 Salvează</button>
+    </div>
+    <div id="i_strategie"></div>
+  </div>
+
+    <div id="imprumut" class="hide">
+    <div class="back" onclick="show('home')">← înapoi</div>
+    <h2>💸 Împrumut nou</h2>
+    <div class="card">
+      <label>Data</label>
+      <input type="date" id="im_data">
+      <label>Din categorie</label>
+      <select id="im_din"></select>
+      <label>În categorie</label>
+      <select id="im_in"></select>
+      <label>Sumă (lei)</label>
+      <input type="number" id="im_suma" inputmode="decimal" step="0.01" placeholder="ex: 2000">
+      <label>Notă (opțional)</label>
+      <textarea id="im_nota" rows="2"></textarea>
+      <button class="btn" onclick="salveazaImprumut()">💾 Salvează</button>
+    </div>
+  </div>
+
+  <div id="rambursare" class="hide">
+    <div class="back" onclick="show('home')">← înapoi</div>
+    <h2>💰 Rambursare</h2>
+    <div class="card">
+      <label>Alege împrumut deschis</label>
+      <select id="rb_imp"></select>
+      <div id="rb_info" style="color: var(--muted); font-size: 13px; margin-top: 6px;"></div>
+      <label>Data rambursării</label>
+      <input type="date" id="rb_data">
+      <label>Sumă rambursată acum (lei)</label>
+      <input type="number" id="rb_suma" inputmode="decimal" step="0.01" placeholder="ex: 500">
+      <button class="btn" onclick="salveazaRambursare()">💾 Salvează</button>
+    </div>
+  </div>
+
+  <div id="buget" class="hide">
+    <div class="back" onclick="show('home')">← înapoi</div>
+    <h2>📊 Buget</h2>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label>An</label>
+          <select id="b_an"></select>
+        </div>
+        <div>
+          <label>Luna</label>
+          <select id="b_luna"></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat"><span class="lbl">Total lună</span><span class="val" id="b_tl">…</span></div>
+      <div class="stat"><span class="lbl">Datorii lună</span><span class="val" id="b_td">…</span></div>
+      <div class="stat"><span class="lbl">Total an</span><span class="val" id="b_ta">…</span></div>
+    </div>
+    <div id="b_datorii"></div>
+    <div id="b_lista"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+
+
+
+  <script>
+    var categorii = [];
+
+    function fmt(n) {
+      var s = (Number(n)||0).toLocaleString("ro-RO", {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      return s + " lei";
+    }
+    function toast(msg, ok) {
+      var t = document.getElementById("toast");
+      t.textContent = msg; t.className = "toast " + (ok ? "ok" : "err"); t.style.display = "block";
+      setTimeout(function(){ t.style.display = "none"; }, 3000);
+    }
+
+    function busyBtn(btn, busy, textOriginal) {
+      if (busy) { btn.dataset.txt = btn.textContent; btn.textContent = "⏳ Se salvează…"; btn.disabled = true; }
+      else { btn.textContent = btn.dataset.txt || textOriginal; btn.disabled = false; }
+    }
+    function show(id) {
+      ["home","intrare","imprumut","rambursare","buget"].forEach(function(x){
+        document.getElementById(x).classList.add("hide");
+      });
+      document.getElementById(id).classList.remove("hide");
+      if (id === "home") loadSumar();
+      if (id === "intrare") setupIntrare();
+      if (id === "imprumut") setupImprumut();
+      if (id === "rambursare") setupRambursare();
+      if (id === "buget") setupBuget();
+    }
+    function loadSumar() {
+      google.script.run.withSuccessHandler(function(s){
+        document.getElementById("lunaLbl").textContent = "(" + s.luna + ")";
+        var sv = document.getElementById("soldVal");
+        sv.textContent = fmt(s.soldLuna);
+        sv.className = "val " + (s.soldLuna < 0 ? "neg" : "pos");
+        document.getElementById("datoriiVal").textContent = fmt(s.datorii);
+      }).api_getSumar();
+      incarcaDatoriiDeschise("h_datorii");
+    }
+    function loadCategorii(cb) {
+      if (categorii.length) { cb(); return; }
+      google.script.run.withSuccessHandler(function(cats){
+        categorii = cats; cb();
+      }).api_getCategorii();
+    }
+    function setupIntrare() {
+      var azi = new Date();
+      var iso = azi.toISOString().slice(0,10);
+      document.getElementById("i_data").value = iso;
+      document.getElementById("i_suma").value = "";
+      document.getElementById("i_nota").value = "";
+      loadCategorii(function(){
+        var sel = document.getElementById("i_cat");
+        sel.innerHTML = "";
+        categorii.forEach(function(c){
+          var o = document.createElement("option");
+          o.value = c.name;
+          o.textContent = (c.owner === "Isabela" ? "🌸 " : "🔷 ") + c.name;
+          sel.appendChild(o);
+        });
+      });
+      incarcaStrategie();
+    }
+
+    function salveazaIntrare() {
+      var btn = event.target;
+      var payload = {
+        data: document.getElementById("i_data").value,
+        categorie: document.getElementById("i_cat").value,
+        suma: document.getElementById("i_suma").value,
+        nota: document.getElementById("i_nota").value
+      };
+      if (!payload.suma) { toast("Adaugă suma", false); return; }
+      busyBtn(btn, true);
+      google.script.run
+        .withSuccessHandler(function(r){
+          busyBtn(btn, false);
+          document.getElementById("i_suma").value = "";
+          document.getElementById("i_nota").value = "";
+          document.getElementById("i_suma").focus();
+          toast("✓ Salvat!", true);
+          incarcaStrategie();
+        })
+        .withFailureHandler(function(e){ busyBtn(btn, false); toast("Eroare: " + e.message, false); })
+        .api_adaugaIntrare(payload);
+    }
+
+    function salveazaImprumut() {
+      var btn = event.target;
+      var payload = {
+        data: document.getElementById("im_data").value,
+        din: document.getElementById("im_din").value,
+        in_: document.getElementById("im_in").value,
+        suma: document.getElementById("im_suma").value,
+        nota: document.getElementById("im_nota").value
+      };
+      if (!payload.suma) { toast("Adaugă suma", false); return; }
+      busyBtn(btn, true);
+      google.script.run
+        .withSuccessHandler(function(r){
+          busyBtn(btn, false);
+          document.getElementById("im_suma").value = "";
+          document.getElementById("im_nota").value = "";
+          toast("✓ Împrumut salvat!", true);
+          show("home");
+        })
+        .withFailureHandler(function(e){ busyBtn(btn, false); toast("Eroare: " + e.message, false); })
+        .api_adaugaImprumut(payload);
+    }
+
+    function salveazaRambursare() {
+      var btn = event.target;
+      var idx = document.getElementById("rb_imp").value;
+      var x = imprumuturi[idx];
+      if (!x) { toast("Alege un împrumut", false); return; }
+      var suma = document.getElementById("rb_suma").value;
+      if (!suma) { toast("Adaugă suma", false); return; }
+      busyBtn(btn, true);
+      google.script.run
+        .withSuccessHandler(function(r){
+          busyBtn(btn, false);
+          document.getElementById("rb_suma").value = "";
+          toast("✓ Rambursat! Sold nou: " + fmt(r.sold), true);
+          setupRambursare();
+        })
+        .withFailureHandler(function(e){ busyBtn(btn, false); toast("Eroare: " + e.message, false); })
+        .api_rambursare({ rand: x.rand, suma: suma, data: document.getElementById("rb_data").value });
+    }
+
+    show("home");
+
+        function setupImprumut() {
+      var azi = new Date();
+      document.getElementById("im_data").value = azi.toISOString().slice(0,10);
+      document.getElementById("im_suma").value = "";
+      document.getElementById("im_nota").value = "";
+      loadCategorii(function(){
+        ["im_din","im_in"].forEach(function(id){
+          var sel = document.getElementById(id);
+          sel.innerHTML = "";
+          categorii.forEach(function(c){
+            var o = document.createElement("option");
+            o.value = c.name;
+            o.textContent = (c.owner === "Isabela" ? "🌸 " : "🔷 ") + c.name;
+            sel.appendChild(o);
+          });
+        });
+      });
+    }
+
+    var imprumuturi = [];
+    function setupRambursare() {
+      document.getElementById("rb_data").value = new Date().toISOString().slice(0,10);
+      document.getElementById("rb_suma").value = "";
+      document.getElementById("rb_info").textContent = "Se încarcă...";
+      var sel = document.getElementById("rb_imp");
+      sel.innerHTML = "";
+      google.script.run.withSuccessHandler(function(list){
+        imprumuturi = list;
+        if (!list.length) {
+          document.getElementById("rb_info").textContent = "Nu ai împrumuturi deschise.";
+          return;
+        }
+        list.forEach(function(x, idx){
+          var o = document.createElement("option");
+          o.value = idx;
+          o.textContent = x.din + " → " + x.in_ + "  (sold " + fmt(x.sold) + ")";
+          sel.appendChild(o);
+        });
+        actualizeazaInfoRb();
+        sel.onchange = actualizeazaInfoRb;
+      }).api_getImprumuturiDeschise();
+    }
+
+    function actualizeazaInfoRb() {
+      var idx = document.getElementById("rb_imp").value;
+      var x = imprumuturi[idx]; if (!x) return;
+      document.getElementById("rb_info").textContent =
+        "Din " + x.data + " • Sumă " + fmt(x.suma) +
+        " • Rambursat " + fmt(x.rambursat) + " • Sold " + fmt(x.sold);
+    }
+
+    function veziBugetul() { show("buget"); }
+
+    function setupBuget() {
+      var azi = new Date();
+      var an = azi.getFullYear(), luna = ["Ianuarie","Februarie","Martie","Aprilie","Mai","Iunie","Iulie","August","Septembrie","Octombrie","Noiembrie","Decembrie"][azi.getMonth()];
+      incarcaBuget(an, luna);
+      incarcaDatoriiDeschise("b_datorii");
+    }
+    function incarcaDatoriiDeschise(boxId) {
+      var box = document.getElementById(boxId);
+      box.innerHTML = '<div class="card" style="color:var(--muted);text-align:center">Se încarcă datoriile…</div>';
+      google.script.run
+        .withSuccessHandler(function(list){
+          if (!list.length) {
+            box.innerHTML = '<div class="card"><strong>💸 Împrumuturi deschise</strong><div style="color:var(--muted);margin-top:6px">Nu ai datorii active.</div></div>';
+            return;
+          }
+          var total = 0;
+          list.forEach(function(x){ total += Number(x.sold) || 0; });
+          var html = '<div class="card">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+              '<strong>💸 Împrumuturi deschise</strong>' +
+              '<span class="val neg">' + fmt(total) + '</span>' +
+            '</div>';
+          list.forEach(function(x){
+            html +=
+              '<div class="stat" style="flex-direction:column;align-items:flex-start;border-top:1px solid rgba(255,255,255,.06);padding-top:8px;margin-top:6px">' +
+                '<div style="display:flex;justify-content:space-between;width:100%">' +
+                  '<span>' + x.din + ' → ' + x.in_ + '</span>' +
+                  '<span class="val neg">' + fmt(x.sold) + '</span>' +
+                '</div>' +
+                '<div style="color:var(--muted);font-size:.85em;margin-top:2px">' +
+                  x.data + ' • sumă ' + fmt(x.suma) + ' • rambursat ' + fmt(x.rambursat) +
+                '</div>' +
+              '</div>';
+          });
+          html += '</div>';
+          box.innerHTML = html;
+        })
+        .withFailureHandler(function(e){
+          box.innerHTML = '<div class="card" style="color:var(--err)">Eroare datorii: ' + e.message + '</div>';
+        })
+        .api_getImprumuturiDeschise();
+    }
+    function incarcaBuget(an, luna) {
+      document.getElementById("b_lista").innerHTML = '<div class="card" style="color:var(--muted);text-align:center">Se încarcă…</div>';
+      google.script.run
+        .withSuccessHandler(function(r){ renderBuget(r); })
+        .withFailureHandler(function(e){
+          document.getElementById("b_lista").innerHTML = '<div class="card" style="color:var(--err)">Eroare: ' + e.message + '</div>';
+        })
+        .api_getBuget({ an: an, luna: luna });
+    }
+    function renderBuget(r) {
+      var selAn = document.getElementById("b_an");
+      selAn.innerHTML = "";
+      r.ani.forEach(function(a){
+        var o = document.createElement("option");
+        o.value = a; o.textContent = a; if (a === r.an) o.selected = true;
+        selAn.appendChild(o);
+      });
+      selAn.onchange = function(){ incarcaBuget(Number(selAn.value), document.getElementById("b_luna").value); };
+
+      var selL = document.getElementById("b_luna");
+      selL.innerHTML = "";
+      r.luni.forEach(function(l){
+        var o = document.createElement("option");
+        o.value = l; o.textContent = l; if (l === r.luna) o.selected = true;
+        selL.appendChild(o);
+      });
+      selL.onchange = function(){ incarcaBuget(Number(selAn.value), selL.value); };
+
+      document.getElementById("b_tl").textContent = fmt(r.totalLuna);
+      document.getElementById("b_tl").className = "val " + (r.totalLuna < 0 ? "neg" : "pos");
+      document.getElementById("b_td").textContent = fmt(r.totalDatorii);
+      document.getElementById("b_td").className = "val " + (r.totalDatorii < 0 ? "neg" : "pos");
+      document.getElementById("b_ta").textContent = fmt(r.totalAn);
+      document.getElementById("b_ta").className = "val " + (r.totalAn < 0 ? "neg" : "pos");
+
+      var html = "";
+      r.categorii.forEach(function(c){
+        var color = c.owner === "Isabela" ? "var(--isabela)" : "var(--marius)";
+        var lunaCls = c.luna < 0 ? "neg" : "pos";
+        var datCls = c.datorii < 0 ? "neg" : "pos";
+        html += '<div class="card">' +
+          '<div style="display:flex;align-items:center;margin-bottom:8px">' +
+            '<span class="cat-dot" style="background:' + color + '"></span>' +
+            '<strong>' + c.nume + '</strong>' +
+          '</div>' +
+          '<div class="stat"><span class="lbl">Lună</span><span class="val ' + lunaCls + '">' + fmt(c.luna) + '</span></div>' +
+          '<div class="stat"><span class="lbl">Datorii</span><span class="val ' + datCls + '">' + fmt(c.datorii) + '</span></div>' +
+          '<div class="stat"><span class="lbl">Total an</span><span class="val">' + fmt(c.totalAn) + '</span></div>' +
+        '</div>';
+      });
+      document.getElementById("b_lista").innerHTML = html || '<div class="card" style="color:var(--muted);text-align:center">Nimic de afișat</div>';
+    }
+
+    function incarcaStrategie() {
+      var box = document.getElementById("i_strategie");
+      box.innerHTML = '<div class="card" style="color:var(--muted);text-align:center">Se încarcă strategia…</div>';
+      google.script.run
+        .withSuccessHandler(function(r){ renderStrategie(r); })
+        .withFailureHandler(function(e){ box.innerHTML = '<div class="card" style="color:var(--err)">Eroare: ' + e.message + '</div>'; })
+        .api_getStrategie();
+    }
+    function renderStrategie(r) {
+      var box = document.getElementById("i_strategie");
+      if (!r.items || !r.items.length) { box.innerHTML = ""; return; }
+      var rows = "";
+      var totalTinta = 0, totalPus = 0;
+      r.items.forEach(function(c){
+        totalTinta += Number(c.tinta) || 0;
+        totalPus += Number(c.pus) || 0;
+        var emoji = c.owner === "Isabela" ? "🌸" : "🔷";
+        var chk = c.ok ? "✅" : "⬜";
+        var nota = c.notite ? '<div style="color:var(--muted);font-size:11px;margin-top:2px">' + c.notite + '</div>' : "";
+        rows +=
+          '<tr>' +
+            '<td>' + emoji + ' ' + c.name + nota + '</td>' +
+            '<td class="num">' + fmt(c.tinta) + '</td>' +
+            '<td class="num">' + fmt(c.pus) + '</td>' +
+            '<td class="chk">' + chk + '</td>' +
+          '</tr>';
+      });
+      box.innerHTML =
+        '<div class="card">' +
+          '<div style="margin-bottom:8px"><strong>🎯 Strategie — ' + r.luna + '</strong></div>' +
+          '<table class="stbl"><thead><tr><th>Categorie</th><th class="num">Țintă</th><th class="num">Pus</th><th class="chk">✓</th></tr></thead><tbody>' +
+          rows +
+          '<tr style="border-top:2px solid #2b3040;font-weight:700">' +
+            '<td>TOTAL</td>' +
+            '<td class="num">' + fmt(totalTinta) + '</td>' +
+            '<td class="num">' + fmt(totalPus) + '</td>' +
+            '<td class="chk">' + (totalPus >= totalTinta ? "✅" : "") + '</td>' +
+          '</tr>' +
+          '</tbody></table>' +
+        '</div>';
+    }
+  </script>
+</body>
+</html>

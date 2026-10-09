@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; connect-src https://urgqslgslpdscvgnoauc.supabase.co wss://urgqslgslpdscvgnoauc.supabase.co; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+  <meta name="theme-color" content="#0f1115">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>💰 Money App</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+
+  <div id="pornire" class="ecran">
+    <div class="card info">Se încarcă…</div>
+  </div>
+
+  <div id="login" class="ecran hide">
+    <h1>💰 Money App</h1>
+    <form id="f_login" class="card">
+      <label for="l_email">Email</label>
+      <input type="email" id="l_email" autocomplete="username" required>
+      <label for="l_parola">Parolă</label>
+      <input type="password" id="l_parola" autocomplete="current-password" required>
+      <button class="btn" type="submit">Intră</button>
+    </form>
+  </div>
+
+  <div id="home" class="ecran hide">
+    <div class="top">
+      <h1>💰 Money App</h1>
+      <button class="link" id="btn_logout" type="button">Ieșire</button>
+    </div>
+    <div class="card">
+      <div class="stat"><span class="lbl">Sold <span id="lunaLbl"></span></span>
+        <span class="val" id="soldVal">…</span></div>
+      <div class="stat"><span class="lbl">Datorii deschise</span>
+        <span class="val" id="datoriiVal">…</span></div>
+    </div>
+    <div id="h_datorii"></div>
+    <button class="big" type="button" data-go="intrare">➕ Intrare rapidă</button>
+    <button class="big" type="button" data-go="imprumut">💸 Împrumut nou</button>
+    <button class="big" type="button" data-go="rambursare">💰 Rambursare</button>
+    <button class="big" type="button" data-go="buget">📊 Vezi bugetul</button>
+    <button class="big" type="button" data-go="tranzactii">📋 Tranzacții</button>
+    <button class="big" type="button" data-go="imprumuturi">🧾 Împrumuturi</button>
+    <button class="big" type="button" data-go="categorii">⚙️ Categorii și ani</button>
+    <button class="big" type="button" data-go="export">💾 Export</button>
+  </div>
+
+  <div id="intrare" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>➕ Intrare rapidă</h2>
+    <div class="card">
+      <label for="i_data">Data</label>
+      <input type="date" id="i_data">
+      <label for="i_cat">Categorie</label>
+      <select id="i_cat"></select>
+      <label for="i_suma">Sumă (lei) — negativ = cheltuială</label>
+      <input type="number" id="i_suma" inputmode="decimal" step="0.01" placeholder="ex: 40 sau -120">
+      <label for="i_nota">Notă (opțional)</label>
+      <textarea id="i_nota" rows="2"></textarea>
+      <button class="btn" type="button" id="btn_intrare">💾 Salvează</button>
+    </div>
+    <div id="i_strategie"></div>
+  </div>
+
+  <div id="imprumut" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>💸 Împrumut nou</h2>
+    <div class="card">
+      <label for="im_data">Data</label>
+      <input type="date" id="im_data">
+      <label for="im_din">Din categorie</label>
+      <select id="im_din"></select>
+      <label for="im_in">În categorie</label>
+      <select id="im_in"></select>
+      <label for="im_suma">Sumă (lei)</label>
+      <input type="number" id="im_suma" inputmode="decimal" step="0.01" placeholder="ex: 2000">
+      <label for="im_nota">Notă (opțional)</label>
+      <textarea id="im_nota" rows="2"></textarea>
+      <button class="btn" type="button" id="btn_imprumut">💾 Salvează</button>
+    </div>
+  </div>
+
+  <div id="rambursare" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>💰 Rambursare</h2>
+    <div class="card">
+      <label for="rb_imp">Alege împrumut deschis</label>
+      <select id="rb_imp"></select>
+      <div id="rb_info" class="info-text"></div>
+      <label for="rb_data">Data rambursării</label>
+      <input type="date" id="rb_data">
+      <label for="rb_suma">Sumă rambursată acum (lei)</label>
+      <input type="number" id="rb_suma" inputmode="decimal" step="0.01" placeholder="ex: 500">
+      <button class="btn" type="button" id="btn_rambursare">💾 Salvează</button>
+    </div>
+  </div>
+
+  <div id="buget" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>📊 Buget</h2>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="b_an">An</label>
+          <select id="b_an"></select>
+        </div>
+        <div>
+          <label for="b_luna">Luna</label>
+          <select id="b_luna"></select>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="stat"><span class="lbl">Total lună</span><span class="val" id="b_tl">…</span></div>
+      <div class="stat"><span class="lbl">Datorii lună</span><span class="val" id="b_td">…</span></div>
+      <div class="stat"><span class="lbl">Total an</span><span class="val" id="b_ta">…</span></div>
+    </div>
+    <div id="b_datorii"></div>
+    <div id="b_lista"></div>
+  </div>
+
+  <div id="tranzactii" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>📋 Tranzacții</h2>
+    <div class="card">
+      <div class="row">
+        <div>
+          <label for="t_an">An</label>
+          <select id="t_an"></select>
+        </div>
+        <div>
+          <label for="t_luna">Luna</label>
+          <select id="t_luna"></select>
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="t_sterse"> Doar cele șterse</label>
+    </div>
+    <div id="t_lista"></div>
+  </div>
+
+  <div id="tr_edit" class="ecran hide">
+    <button class="link back" type="button" data-go="tranzactii">← înapoi</button>
+    <h2>✏️ Editează tranzacția</h2>
+    <div class="card">
+      <div id="te_info" class="info-text"></div>
+      <label for="te_data">Data</label>
+      <input type="date" id="te_data">
+      <label for="te_cat">Categorie</label>
+      <select id="te_cat"></select>
+      <label for="te_suma">Sumă (lei) — negativ = cheltuială</label>
+      <input type="number" id="te_suma" inputmode="decimal" step="0.01">
+      <label for="te_nota">Notă</label>
+      <textarea id="te_nota" rows="2"></textarea>
+      <button class="btn" type="button" id="btn_te_salveaza">💾 Salvează</button>
+      <button class="btn danger" type="button" id="btn_te_sterge">🗑️ Șterge</button>
+    </div>
+  </div>
+
+  <div id="imprumuturi" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>🧾 Împrumuturi</h2>
+    <div class="card">
+      <label class="check"><input type="checkbox" id="il_sterse"> Doar cele șterse</label>
+    </div>
+    <div id="il_lista"></div>
+  </div>
+
+  <div id="imp_edit" class="ecran hide">
+    <button class="link back" type="button" data-go="imprumuturi">← înapoi</button>
+    <h2>✏️ Editează împrumutul</h2>
+    <div class="card">
+      <div id="ie_info" class="info-text"></div>
+      <label for="ie_data">Data</label>
+      <input type="date" id="ie_data">
+      <label for="ie_din">Din categorie</label>
+      <select id="ie_din"></select>
+      <label for="ie_in">În categorie</label>
+      <select id="ie_in"></select>
+      <label for="ie_suma">Sumă (lei)</label>
+      <input type="number" id="ie_suma" inputmode="decimal" step="0.01">
+      <label for="ie_nota">Notă</label>
+      <textarea id="ie_nota" rows="2"></textarea>
+      <button class="btn" type="button" id="btn_ie_salveaza">💾 Salvează</button>
+      <button class="btn danger" type="button" id="btn_ie_sterge">🗑️ Șterge</button>
+    </div>
+  </div>
+
+  <div id="categorii" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>⚙️ Categorii și ani</h2>
+    <button class="big" type="button" id="btn_cat_noua">➕ Categorie nouă</button>
+    <div id="cl_lista"></div>
+    <div class="card">
+      <strong>📅 Ani</strong>
+      <div id="cl_ani" class="muted mt"></div>
+      <label for="cl_an_nou">An nou</label>
+      <input type="number" id="cl_an_nou" inputmode="numeric" min="2000" max="2100" placeholder="ex: 2027">
+      <button class="btn secondary" type="button" id="btn_cl_an">➕ Adaugă an</button>
+    </div>
+  </div>
+
+  <div id="cat_edit" class="ecran hide">
+    <button class="link back" type="button" data-go="categorii">← înapoi</button>
+    <h2 id="ce_titlu">✏️ Editează categoria</h2>
+    <div class="card">
+      <label for="ce_nume">Nume</label>
+      <input type="text" id="ce_nume" maxlength="60">
+      <label for="ce_owner">Al cui</label>
+      <select id="ce_owner"></select>
+      <label for="ce_tinta">Țintă lunară (lei)</label>
+      <input type="number" id="ce_tinta" inputmode="decimal" step="0.01" min="0" placeholder="0">
+      <label for="ce_notite">Notițe</label>
+      <textarea id="ce_notite" rows="2"></textarea>
+      <label>Activă în</label>
+      <div id="ce_ani"></div>
+      <button class="btn" type="button" id="btn_ce_salveaza">💾 Salvează</button>
+      <button class="btn danger" type="button" id="btn_ce_sterge">🗑️ Șterge</button>
+    </div>
+  </div>
+
+  <div id="export" class="ecran hide">
+    <button class="link back" type="button" data-go="home">← înapoi</button>
+    <h2>💾 Export</h2>
+    <div class="card">
+      <div class="muted">Descarcă toate datele, inclusiv cele șterse. Păstrează periodic o copie (backup).</div>
+      <button class="btn" type="button" id="btn_exp_json">📦 Tot (JSON)</button>
+      <button class="btn secondary" type="button" id="btn_exp_tr">📋 Tranzacții (CSV)</button>
+      <button class="btn secondary" type="button" id="btn_exp_imp">🧾 Împrumuturi (CSV)</button>
+      <button class="btn secondary" type="button" id="btn_exp_cat">⚙️ Categorii (CSV)</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hide"></div>
+</body>
+</html>
